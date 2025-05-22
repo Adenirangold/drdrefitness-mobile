@@ -1,11 +1,25 @@
-import axios from "axios";
+export const getUser = async (token: string) => {
+  let error;
+  try {
+    const response = await fetch(`http://localhost:3000/api/members`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-const api = axios.create({
-  baseURL: "http://localhost:3000",
-  timeout: 10000,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
+    if (!response.ok) {
+      const errorData = await response.json();
+      error = errorData.message || "An unknown error occurred";
+      return;
+    }
 
-export default api;
+    const data = await response.json();
+    return { data, error };
+  } catch (error: any) {
+    console.error("Error fetching user data:", error);
+    error = error.message || "An unknown error occurred";
+    return { data: null, error };
+  }
+};

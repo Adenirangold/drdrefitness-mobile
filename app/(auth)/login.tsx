@@ -11,12 +11,11 @@ import {
 const login = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
-  const { signIn } = useAuth();
+
+  const { signIn, loading } = useAuth();
 
   const handleLogin = async () => {
-    setLoading(true);
-    signIn({ email, password });
+    await signIn({ email, password });
   };
   return (
     <SafeAreaView className="flex-1 items-center justify-center bg-white">

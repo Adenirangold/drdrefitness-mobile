@@ -1,5 +1,4 @@
-import api from "@/lib/api";
-import axios from "axios";
+import { getUser } from "@/lib/api";
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import React, {
@@ -9,6 +8,7 @@ import React, {
   useEffect,
   useState,
 } from "react";
+import { Alert } from "react-native";
 interface LoginProps {
   email: string;
   password: string;
@@ -16,28 +16,48 @@ interface LoginProps {
 interface IAuthContext {
   isAuthenticated: boolean;
   loading: boolean;
+
   signIn: ({ email, password }: LoginProps) => Promise<void>;
   signOut: () => Promise<void>;
+  user: UserData | null;
 }
 
 const AuthContext = createContext<IAuthContext | undefined>(undefined);
-
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
+  const [user, setUser] = useState<UserData | null>(null);
+
   const router = useRouter();
 
   useEffect(() => {
     async function checkAuth() {
       try {
         const token = await SecureStore.getItemAsync("authToken");
-        if (token) {
-          setIsAuthenticated(true);
-          axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-          router.replace("/home");
+        if (!token) {
+          setIsAuthenticated(false);
+          setLoading(false);
+          return;
         }
+
+        const result = await getUser(token);
+        if (!result) {
+          throw new Error("Failed to fetch user data.");
+        }
+
+        const { data, error } = result;
+
+        if (error || !data) {
+          throw new Error("Invalid user data.");
+        }
+
+        setUser(data);
+        setIsAuthenticated(true);
+        router.replace("/home");
       } catch (error) {
         console.error("Error checking auth:", error);
+        setIsAuthenticated(false);
+        setUser(null);
       } finally {
         setLoading(false);
       }
@@ -45,25 +65,48 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     checkAuth();
   }, []);
 
-  const signIn = async ({ email, password }: LoginProps) => {
+  const signIn = async (data: LoginProps) => {
+    setLoading(true);
     try {
-      const response = await api.get("/endpoint");
-      console.log(response.data);
-      const token = "hhh";
-      await SecureStore.setItemAsync("authToken", token);
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-      setIsAuthenticated(true);
+      const response = await fetch("http://localhost:3000/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
 
+      if (!response.ok) {
+        const errorData = await response.json();
+        setLoading(false);
+        if (errorData && errorData.message) {
+          Alert.alert("Login failed", errorData.message);
+          return;
+        }
+      }
+
+      const responseData = await response.json();
+      const token = responseData.data?.token;
+      if (!token) {
+        throw new Error("No token received from server.");
+      }
+
+      await SecureStore.setItemAsync("authToken", token);
+      setIsAuthenticated(true);
       router.replace("/home");
-    } catch (error) {
-      console.log(error);
+    } catch (error: any) {
+      Alert.alert("Login failed", "An unknown error occurred");
+      console.log(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   const signOut = async () => {
     await SecureStore.deleteItemAsync("authToken");
-    delete axios.defaults.headers.common["Authorization"];
     setIsAuthenticated(false);
+    setUser(null);
+    router.replace("/login");
   };
 
   const value: IAuthContext = {
@@ -71,6 +114,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     loading,
     signIn,
     signOut,
+    user,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
