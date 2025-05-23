@@ -4,7 +4,7 @@ import { ActivityIndicator } from "react-native";
 import "../globals.css";
 
 export default function Layout() {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
 
   if (loading)
     return (

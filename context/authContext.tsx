@@ -34,6 +34,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     async function checkAuth() {
       try {
         const token = await SecureStore.getItemAsync("authToken");
+
         if (!token) {
           setIsAuthenticated(false);
           setLoading(false);
@@ -51,13 +52,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           throw new Error("Invalid user data.");
         }
 
-        setUser(data);
+        setUser(data.data);
+        await SecureStore.setItemAsync("userData", JSON.stringify(data));
+
         setIsAuthenticated(true);
+
         router.replace("/home");
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error checking auth:", error);
         setIsAuthenticated(false);
         setUser(null);
+        if (error.message.includes("Invalid token")) {
+          Alert.alert("Session Expired", "Please log in again.");
+          router.replace("/login");
+        }
+        Alert.alert("Something happened", "An unknown error occurred.");
       } finally {
         setLoading(false);
       }
@@ -92,6 +101,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       await SecureStore.setItemAsync("authToken", token);
+
       setIsAuthenticated(true);
       router.replace("/home");
     } catch (error: any) {
@@ -104,6 +114,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     await SecureStore.deleteItemAsync("authToken");
+    // await SecureStore.deleteItemAsync("userData");
     setIsAuthenticated(false);
     setUser(null);
     router.replace("/login");
