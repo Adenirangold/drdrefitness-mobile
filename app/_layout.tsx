@@ -1,9 +1,9 @@
 import { AuthProvider } from "@/context/authContext";
-import { SplashScreen, Stack } from "expo-router";
+import { Stack } from "expo-router";
 import "./globals.css";
 
 export default function RootLayout() {
-  SplashScreen.preventAutoHideAsync();
+  // SplashScreen.preventAutoHideAsync();
   return (
     <AuthProvider>
       <Stack>
