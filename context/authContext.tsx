@@ -76,9 +76,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signIn = async (data: LoginProps) => {
     setLoading(true);
-    //  http://172.20.10.3:3000  http://localhost:3000 http://192.168.18.9:3000
+    //  http://172.20.10.3:3000  http://localhost:3000 http://192.168.18.9:3000 192.168.18.5
     try {
-      const response = await fetch("http://172.20.10.3:3000/api/auth/login", {
+      const response = await fetch("http://192.168.18.5:3000/api/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

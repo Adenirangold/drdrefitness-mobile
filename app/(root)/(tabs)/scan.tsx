@@ -1,3 +1,4 @@
+import { Overlay } from "@/components/CameraOverlay";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import React, { useState } from "react";
 import { Button, StyleSheet, Text, View } from "react-native";
@@ -8,7 +9,7 @@ export default function Scan() {
   const [scannedData, setScannedData] = useState(null);
 
   // Debug permission state
-  console.log("Permission:", permission);
+  // console.log("Permission:", permission);
 
   if (!permission) {
     return (
@@ -51,6 +52,7 @@ export default function Scan() {
         onBarcodeScanned={handleBarcodeScanned}
         onMountError={(error) => console.log("Camera mount error:", error)}
       />
+      <Overlay></Overlay>
     </View>
   );
 }
