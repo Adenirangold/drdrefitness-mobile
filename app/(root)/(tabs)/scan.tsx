@@ -1,7 +1,7 @@
 import { Overlay } from "@/components/CameraOverlay";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import React, { useState } from "react";
-import { Button, StyleSheet, Text, View } from "react-native";
+import { Button, SafeAreaView, StyleSheet, Text, View } from "react-native";
 
 export default function Scan() {
   const [permission, requestPermission] = useCameraPermissions();
@@ -21,12 +21,12 @@ export default function Scan() {
 
   if (!permission.granted) {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <Text style={styles.text}>
           We need your permission to use the camera
         </Text>
         <Button onPress={requestPermission} title="Grant Permission" />
-      </View>
+      </SafeAreaView>
     );
   }
 
