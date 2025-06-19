@@ -1,4 +1,5 @@
 import { getUser } from "@/lib/api";
+import Constants from "expo-constants";
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import React, {
@@ -21,6 +22,7 @@ interface IAuthContext {
   signOut: () => Promise<void>;
   user: UserData | null;
 }
+const apiUrl = Constants.expoConfig?.extra?.API;
 
 const AuthContext = createContext<IAuthContext | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -53,8 +55,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
 
         setUser(data.data);
-        await SecureStore.setItemAsync("userData", JSON.stringify(data));
-
         setIsAuthenticated(true);
 
         router.replace("/home");
@@ -78,7 +78,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setLoading(true);
     //  http://172.20.10.3:3000  http://localhost:3000 http://192.168.18.9:3000 192.168.18.5
     try {
-      const response = await fetch("http://172.20.10.3:3000/api/auth/login", {
+      const response = await fetch(`${apiUrl}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

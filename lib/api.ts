@@ -1,7 +1,10 @@
+import Constants from "expo-constants";
+const apiUrl = Constants.expoConfig?.extra?.API;
+
 export const getUser = async (token: string) => {
   let error;
   try {
-    const response = await fetch(`http://172.20.10.3:3000/api/members`, {
+    const response = await fetch(`${apiUrl}/members`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

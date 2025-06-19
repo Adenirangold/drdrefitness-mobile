@@ -1,5 +1,6 @@
 import { Overlay } from "@/components/CameraOverlay";
 import { CameraView, useCameraPermissions } from "expo-camera";
+import * as SecureStore from "expo-secure-store";
 import React, { useState } from "react";
 import { Button, SafeAreaView, StyleSheet, Text, View } from "react-native";
 
@@ -8,9 +9,6 @@ export default function Scan() {
   const [scanned, setScanned] = useState(false);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
-
-  // Debug permission state
-  // console.log("Permission:", permission);
 
   if (!permission) {
     return (
@@ -31,14 +29,34 @@ export default function Scan() {
     );
   }
 
-  const handleBarcodeScanned = ({ data }: { data: any }) => {
-    if (!scanned) {
-      setScanned(true);
+  const handleBarcodeScanned = async ({ data }: { data: any }) => {
+    if (scanned || loading) return;
 
-      console.log(`QR Code scanned: , Data=${data}`);
-      // Allow re-scanning after a delay
-      setTimeout(() => setScanned(false), 3000);
-    }
+    setScanned(true);
+    setLoading(true);
+
+    try {
+      const parsedData = JSON.parse(data);
+      const { token, stationId } = parsedData;
+
+      const jwtToken = await SecureStore.getItemAsync("authToken");
+      if (!jwtToken) {
+        // setResult({ status: "error", message: "No authentication token found" });
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch("https://your-api-url/api/checkinout/scan", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${jwtToken}`,
+        },
+        body: JSON.stringify({ token, stationId }),
+      });
+
+      const resultData = await response.json();
+    } catch (error) {}
   };
 
   return (

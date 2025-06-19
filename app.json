@@ -75,7 +75,8 @@
       "router": {},
       "eas": {
         "projectId": "ebcea117-704a-459c-87ff-7b2832745bc2"
-      }
+      },
+      "API": "http://172.20.10.3:3000/api"
     },
     "owner": "adenirangold"
   }
