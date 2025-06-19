@@ -6,7 +6,8 @@ import { Button, SafeAreaView, StyleSheet, Text, View } from "react-native";
 export default function Scan() {
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
-  const [scannedData, setScannedData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
 
   // Debug permission state
   // console.log("Permission:", permission);
@@ -33,7 +34,7 @@ export default function Scan() {
   const handleBarcodeScanned = ({ data }: { data: any }) => {
     if (!scanned) {
       setScanned(true);
-      setScannedData(data);
+
       console.log(`QR Code scanned: , Data=${data}`);
       // Allow re-scanning after a delay
       setTimeout(() => setScanned(false), 3000);

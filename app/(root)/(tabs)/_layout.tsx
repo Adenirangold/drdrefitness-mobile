@@ -11,43 +11,43 @@ const _layout = () => {
     source: ImageSourcePropType;
     focused: boolean;
   }) => (
-    <View
-      className={`flex flex-row justify-center items-center rounded-full ${
-        focused ? "bg-green-300" : ""
-      }`}
-    >
-      <View
-        className={`rounded-full w-12 h-12 items-center justify-center ${
-          focused ? "bg-red-400" : ""
-        }`}
-      >
-        <Image
-          source={source}
-          tintColor="white"
-          resizeMode="contain"
-          className="w-7 h-7"
-        />
-      </View>
+    <View className="flex justify-center items-center">
+      <Image
+        source={source}
+        tintColor={focused ? "#FFFFFF" : "#A1A1AA"}
+        resizeMode="contain"
+        className="w-6 h-6"
+      />
     </View>
   );
+
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: "white",
-        tabBarInactiveTintColor: "white",
+        tabBarActiveTintColor: "#FFFFFF",
+        tabBarInactiveTintColor: "#A1A1AA",
         tabBarStyle: {
-          backgroundColor: "#333333",
-          borderRadius: 50,
-          paddingBottom: 0, // ios only
-          overflow: "hidden",
-          marginHorizontal: 20,
-          marginBottom: 20,
-          height: 78,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexDirection: "row",
+          backgroundColor: "#1C1C1E",
+          borderTopWidth: 0,
+          borderRadius: 20,
+          marginHorizontal: 16,
+          marginBottom: 24,
+          height: 72, // Increased height to accommodate labels
+          paddingTop: 8,
+          paddingBottom: 12, // More padding for labels
           position: "absolute",
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.3,
+          shadowRadius: 8,
+          elevation: 5,
+        },
+        tabBarItemStyle: {
+          paddingVertical: 6, // Adjusted for better spacing
+        },
+        tabBarLabelStyle: {
+          fontSize: 12, // Ensure font size isn't too large
+          paddingBottom: 4, // Extra space below label
         },
       }}
     >
@@ -60,7 +60,7 @@ const _layout = () => {
             <TabIcon source={icons.home} focused={focused} />
           ),
         }}
-      ></Tabs.Screen>
+      />
       <Tabs.Screen
         name="scan"
         options={{
@@ -70,7 +70,7 @@ const _layout = () => {
             <TabIcon source={icons.scan} focused={focused} />
           ),
         }}
-      ></Tabs.Screen>
+      />
       <Tabs.Screen
         name="profile"
         options={{
@@ -80,7 +80,7 @@ const _layout = () => {
             <TabIcon source={icons.profile} focused={focused} />
           ),
         }}
-      ></Tabs.Screen>
+      />
     </Tabs>
   );
 };
