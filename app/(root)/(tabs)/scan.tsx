@@ -3,236 +3,285 @@
 // import Constants from "expo-constants";
 // import { useRouter } from "expo-router";
 // import * as SecureStore from "expo-secure-store";
-// import React, { useState } from "react";
+// import _ from "lodash";
+// import { useCallback, useRef, useState } from "react";
 // import { ActivityIndicator, Button, Text, View } from "react-native";
-
 // import { SafeAreaView } from "react-native-safe-area-context";
 
 // export default function Scan() {
 //   const [permission, requestPermission] = useCameraPermissions();
-
 //   const [scanned, setScanned] = useState(false);
 //   const [loading, setLoading] = useState(false);
 //   const [result, setResult] = useState({ status: "", message: "" });
-
+//   const isScanningRef = useRef(false);
 //   const router = useRouter();
 
+//   // Debounced barcode scanning handler
+//   const handleBarcodeScanned = useCallback(
+//     _.debounce(async ({ data }: { data: any }) => {
+//       if (isScanningRef.current) {
+//         console.log("Scan ignored: already scanning");
+//         return;
+//       }
+//       isScanningRef.current = true;
+//       setScanned(true);
+//       setLoading(true);
+
+//       try {
+//         const parsedData = JSON.parse(data);
+//         const { token, stationId } = parsedData;
+
+//         if (!token || !stationId) {
+//           setResult({
+//             status: "error",
+//             message: "Invalid QR code data",
+//           });
+//           setScanned(false);
+//           isScanningRef.current = false;
+//           return;
+//         }
+
+//         const jwtToken = await SecureStore.getItemAsync("authToken");
+//         if (!jwtToken) {
+//           setResult({
+//             status: "error",
+//             message: "No authentication token found",
+//           });
+//           setScanned(false);
+//           isScanningRef.current = false;
+//           return;
+//         }
+
+//         const apiUrl = Constants.expoConfig?.extra?.API;
+//         const response = await fetch(`${apiUrl}/checkinout/scan`, {
+//           method: "POST",
+//           headers: {
+//             "Content-Type": "application/json",
+//             Authorization: `Bearer ${jwtToken}`,
+//           },
+//           body: JSON.stringify({ token, stationId }),
+//         });
+
+//         const resultData = await response.json();
+//         console.log("API response:", resultData);
+
+//         if (response.ok && resultData.status === "success") {
+//           setResult({
+//             status: "success",
+//             message:
+//               resultData.action === "check-in"
+//                 ? "Access Granted"
+//                 : "Session ended successfully",
+//           });
+//           router.replace("/home");
+//           setScanned(false);
+//           isScanningRef.current = false;
+//         } else {
+//           setResult({
+//             status: "error",
+//             message: resultData.message || "Access Denied",
+//           });
+//           setScanned(false);
+//           isScanningRef.current = false;
+//         }
+//       } catch (error) {
+//         console.log("Error in handleBarcodeScanned:", error);
+//         setResult({
+//           status: "error",
+//           message: "Network error, please try again",
+//         });
+//         setScanned(false);
+//         isScanningRef.current = false;
+//       } finally {
+//         setLoading(false);
+//       }
+//     }, 1000), // Debounce for 1 second
+//     [] // Empty dependencies to prevent re-creating debounce function
+//   );
+
+//   // Handle retry button
+//   const handleTryAgain = useCallback(() => {
+//     setResult({ status: "", message: "" });
+//     setScanned(false);
+//     isScanningRef.current = false;
+//   }, []);
+
+//   // Conditional content based on permission state
+//   let content;
 //   if (!permission) {
-//     return (
-//       <View className="flex-1 bg-blue-900">
+//     content = (
+//       <SafeAreaView className="flex-1 bg-blue-900 justify-center items-center">
 //         <Text className="text-center pb-2.5 text-lg text-gray-800">
 //           Camera permissions are loading...
 //         </Text>
-//       </View>
-//     );
-//   }
-
-//   if (!permission.granted) {
-//     return (
-//       <SafeAreaView className="flex-1 bg-blue-900">
-//         <Text className="text-center pb-2.5 text-lg text-gray-800">
-//           We need your permission to use the camera
-//         </Text>
-//         <Button onPress={requestPermission} title="Grant Permission" />
 //       </SafeAreaView>
 //     );
+//   } else if (!permission.granted) {
+//     content = (
+//       <SafeAreaView className="flex-1 bg-blue-900 justify-center items-center">
+//         <Text className="text-center pb-2.5 text-lg text-gray-800">
+//           {permission.canAskAgain
+//             ? "We need your permission to use the camera"
+//             : "Camera permission was denied. Please enable it in your device settings."}
+//         </Text>
+//         {permission.canAskAgain && (
+//           <Button onPress={requestPermission} title="Grant Permission" />
+//         )}
+//       </SafeAreaView>
+//     );
+//   } else {
+//     content = (
+//       <>
+//         <CameraView
+//           style={{ flex: 1, width: "100%", height: "100%" }}
+//           facing="back"
+//           onCameraReady={() => console.log("Camera is ready")}
+//           barcodeScannerSettings={{
+//             barcodeTypes: ["qr"],
+//           }}
+//           onBarcodeScanned={handleBarcodeScanned}
+//           onMountError={(error) => console.log("Camera mount error:", error)}
+//         />
+//         <Overlay></Overlay>
+//         {loading && (
+//           <View className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+//             <ActivityIndicator size="large" color="#ffffff" />
+//           </View>
+//         )}
+//         {result.status && (
+//           <View className="absolute top-10 left-0 right-0 p-3 bg-red-600/75">
+//             <Text className="text-center text-lg text-white">
+//               {result.message}
+//             </Text>
+//             {result.status === "error" && (
+//               <Button title="Try Again" onPress={handleTryAgain} />
+//             )}
+//           </View>
+//         )}
+//       </>
+//     );
 //   }
 
-//   const handleBarcodeScanned = async ({ data }: { data: any }) => {
-//     if (scanned || loading) return;
-
-//     setScanned(true);
-//     setLoading(true);
-
-//     try {
-//       const parsedData = JSON.parse(data);
-//       const { token, stationId } = parsedData;
-
-//       const jwtToken = await SecureStore.getItemAsync("authToken");
-//       if (!jwtToken) {
-//         setResult({
-//           status: "error",
-//           message: "No authentication token found",
-//         });
-//         setLoading(false);
-//         return;
-//       }
-
-//       const apiUrl = Constants.expoConfig?.extra?.API;
-//       const response = await fetch(`${apiUrl}/checkinout/scan`, {
-//         method: "POST",
-//         headers: {
-//           "Content-Type": "application/json",
-//           Authorization: `Bearer ${jwtToken}`,
-//         },
-//         body: JSON.stringify({ token, stationId }),
-//       });
-
-//       const resultData = await response.json();
-//       console.log("====================================");
-//       console.log(resultData);
-//       console.log("====================================");
-
-//       if (response.ok && resultData.status === "success") {
-//         setResult({
-//           status: "success",
-//           message:
-//             resultData.action === "check-in"
-//               ? "Access Granted"
-//               : "Session ended successfully",
-//         });
-
-//         router.replace("/home");
-//       } else {
-//         setResult({
-//           status: "error",
-//           message:
-//             resultData.message || `Access Denied (${resultData.message})`,
-//         });
-//         setScanned(false);
-//       }
-//     } catch (error) {
-//       setResult({
-//         status: "error",
-//         message: "Network error, please try again",
-//       });
-//       setScanned(false);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   const handleTryAgain = () => {
-//     setResult({ status: "", message: "" });
-//     setScanned(false);
-//   };
-
-//   return (
-//     <View className="flex-1 bg-blue-900">
-//       <CameraView
-//         className="flex-1 w-full h-full"
-//         facing="back"
-//         onCameraReady={() => console.log("Camera is ready")}
-//         barcodeScannerSettings={{
-//           barcodeTypes: ["qr"],
-//         }}
-//         onBarcodeScanned={handleBarcodeScanned}
-//         onMountError={(error) => console.log("Camera mount error:", error)}
-//       />
-//       <Overlay></Overlay>
-//       {loading && (
-//         <View className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-//           <ActivityIndicator size="large" color="#ffffff" />
-//         </View>
-//       )}
-//     </View>
-//   );
+//   return <View className="flex-1 bg-blue-900">{content}</View>;
 // }
 
 import { Overlay } from "@/components/CameraOverlay";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import Constants from "expo-constants";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
-import _ from "lodash";
 import { useCallback, useRef, useState } from "react";
-import { ActivityIndicator, Button, Text, View } from "react-native";
+import { ActivityIndicator, Button, Modal, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Scan() {
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState({ status: "", message: "" });
+  const [modalVisible, setModalVisible] = useState(false);
+  const [result, setResult] = useState({ status: "", message: "", action: "" });
   const isScanningRef = useRef(false);
   const router = useRouter();
 
-  // Debounced barcode scanning handler
-  const handleBarcodeScanned = useCallback(
-    _.debounce(async ({ data }: { data: any }) => {
-      if (isScanningRef.current) {
-        console.log("Scan ignored: already scanning");
-        return;
-      }
-      isScanningRef.current = true;
-      setScanned(true);
-      setLoading(true);
-
-      try {
-        const parsedData = JSON.parse(data);
-        const { token, stationId } = parsedData;
-        if (!token || !stationId) {
-          setResult({
-            status: "error",
-            message: "Invalid QR code data",
-          });
-          setScanned(false);
-          isScanningRef.current = false;
-          return;
-        }
-
-        const jwtToken = await SecureStore.getItemAsync("authToken");
-        if (!jwtToken) {
-          setResult({
-            status: "error",
-            message: "No authentication token found",
-          });
-          setScanned(false);
-          isScanningRef.current = false;
-          return;
-        }
-
-        const apiUrl = Constants.expoConfig?.extra?.API;
-        const response = await fetch(`${apiUrl}/checkinout/scan`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${jwtToken}`,
-          },
-          body: JSON.stringify({ token, stationId }),
-        });
-
-        const resultData = await response.json();
-        console.log("API response:", resultData);
-
-        if (response.ok && resultData.status === "success") {
-          setResult({
-            status: "success",
-            message:
-              resultData.action === "check-in"
-                ? "Access Granted"
-                : "Session ended successfully",
-          });
-          router.replace("/home");
-        } else {
-          setResult({
-            status: "error",
-            message: resultData.message || "Access Denied",
-          });
-          setScanned(false);
-          isScanningRef.current = false;
-        }
-      } catch (error) {
-        console.log("Error in handleBarcodeScanned:", error);
-        setResult({
-          status: "error",
-          message: "Network error, please try again",
-        });
-        setScanned(false);
-        isScanningRef.current = false;
-      } finally {
-        setLoading(false);
-      }
-    }, 1000), // Debounce for 1 second
-    [] // Empty dependencies to prevent re-creating debounce function
+  useFocusEffect(
+    useCallback(() => {
+      setScanned(false);
+      setLoading(false);
+      setModalVisible(false);
+      setResult({ status: "", message: "", action: "" });
+      isScanningRef.current = false;
+    }, [])
   );
 
-  // Handle retry button
-  const handleTryAgain = useCallback(() => {
-    setResult({ status: "", message: "" });
-    setScanned(false);
-    isScanningRef.current = false;
-  }, []);
+  // Handle barcode scanning
+  const handleBarcodeScanned = async ({ data }: { data: any }) => {
+    if (isScanningRef.current || scanned) {
+      console.log("Scan ignored: already scanned");
+      return;
+    }
+    isScanningRef.current = true;
+    setScanned(true);
+    setLoading(true);
+
+    try {
+      const parsedData = JSON.parse(data);
+      const { token, stationId } = parsedData;
+
+      if (!token || !stationId) {
+        setResult({
+          status: "error",
+          message: "Invalid QR code data",
+          action: "",
+        });
+        setModalVisible(true);
+        return;
+      }
+
+      const jwtToken = await SecureStore.getItemAsync("authToken");
+      if (!jwtToken) {
+        setResult({
+          status: "error",
+          message: "No authentication token found",
+          action: "",
+        });
+        setModalVisible(true);
+        return;
+      }
+
+      const apiUrl = Constants.expoConfig?.extra?.API;
+      const response = await fetch(`${apiUrl}/checkinout/scan`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${jwtToken}`,
+        },
+        body: JSON.stringify({ token, stationId }),
+      });
+
+      const resultData = await response.json();
+      console.log("API response:", resultData);
+
+      if (response.ok && resultData.status === "success") {
+        setResult({
+          status: "success",
+          message:
+            resultData.action === "check-in"
+              ? "Access Granted"
+              : "Session ended successfully",
+          action: resultData.action,
+        });
+      } else {
+        setResult({
+          status: "error",
+          message: resultData.message || "Access Denied",
+          action: "",
+        });
+      }
+      setModalVisible(true);
+    } catch (error) {
+      console.log("Error in handleBarcodeScanned:", error);
+      setResult({
+        status: "error",
+        message: "Network error, please try again",
+        action: "",
+      });
+      setModalVisible(true);
+    } finally {
+      setLoading(false);
+      isScanningRef.current = false;
+    }
+  };
+
+  // Handle modal button press
+  const handleModalButton = () => {
+    setModalVisible(false);
+    if (result.status === "success") {
+      router.replace("/home");
+    } else {
+      setScanned(false);
+      setResult({ status: "", message: "", action: "" });
+    }
+  };
 
   // Conditional content based on permission state
   let content;
@@ -248,9 +297,13 @@ export default function Scan() {
     content = (
       <SafeAreaView className="flex-1 bg-blue-900 justify-center items-center">
         <Text className="text-center pb-2.5 text-lg text-gray-800">
-          We need your permission to use the camera
+          {permission.canAskAgain
+            ? "We need your permission to use the camera"
+            : "Camera permission was denied. Please enable it in your device settings."}
         </Text>
-        <Button onPress={requestPermission} title="Grant Permission" />
+        {permission.canAskAgain && (
+          <Button onPress={requestPermission} title="Grant Permission" />
+        )}
       </SafeAreaView>
     );
   } else {
@@ -263,15 +316,33 @@ export default function Scan() {
           barcodeScannerSettings={{
             barcodeTypes: ["qr"],
           }}
-          onBarcodeScanned={handleBarcodeScanned}
+          onBarcodeScanned={scanned ? undefined : handleBarcodeScanned}
           onMountError={(error) => console.log("Camera mount error:", error)}
         />
-        <Overlay></Overlay>
+        <Overlay />
         {loading && (
           <View className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
             <ActivityIndicator size="large" color="#ffffff" />
           </View>
         )}
+        <Modal
+          visible={modalVisible}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setModalVisible(false)}
+        >
+          <View className="flex-1 bg-black bg-opacity-50 justify-center items-center">
+            <View className="bg-white p-5 rounded-lg w-4/5">
+              <Text className="text-center text-lg font-bold mb-4">
+                {result.message}
+              </Text>
+              <Button
+                title={result.status === "success" ? "Go to Home" : "Try Again"}
+                onPress={handleModalButton}
+              />
+            </View>
+          </View>
+        </Modal>
       </>
     );
   }
