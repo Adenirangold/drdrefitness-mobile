@@ -1,11 +1,12 @@
 import React from "react";
-import { Text, View } from "react-native";
+import { Text } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const profile = () => {
   return (
-    <View>
-      <Text>profile</Text>
-    </View>
+    <SafeAreaView className="flex-1 items-center justify-center bg-white">
+      <Text>PROFILEEE</Text>
+    </SafeAreaView>
   );
 };
 

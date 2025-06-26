@@ -71,6 +71,16 @@ const _layout = () => {
           ),
         }}
       />
+      {/* <Tabs.Screen
+        name="resubscribe"
+        options={{
+          title: "Resubscribe",
+          headerShown: false,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon source={icons.arrowSpin} focused={focused} />
+          ),
+        }}
+      /> */}
       <Tabs.Screen
         name="profile"
         options={{
