@@ -35,6 +35,14 @@ const inner = rrect(
 );
 
 export const Overlay = () => {
+  console.log("====================================");
+  console.log("hey");
+  console.log("====================================");
+  console.log("====================================");
+  console.log("hey");
+  console.log("====================================");
+  console.log("====================================");
+  console.log("====================================");
   // Animation setup for the scanning line
   const linePosition = useSharedValue(0);
 
