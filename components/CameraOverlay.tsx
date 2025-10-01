@@ -39,7 +39,6 @@ export const Overlay = () => {
   console.log("hey");
   console.log("====================================");
   console.log("====================================");
-  console.log("hey");
 
   // Animation setup for the scanning line
   const linePosition = useSharedValue(0);
