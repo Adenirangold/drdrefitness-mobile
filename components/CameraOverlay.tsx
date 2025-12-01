@@ -39,7 +39,6 @@ export const Overlay = () => {
   const linePosition = useSharedValue(0);
   const linePosition = useSharedValue(0);
   const linePosition = useSharedValue(0);
-  const linePosition = useSharedValue(0);
 
   useEffect(() => {
     linePosition.value = withRepeat(
