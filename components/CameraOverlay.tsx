@@ -38,7 +38,6 @@ export const Overlay = () => {
   // Animation setup for the scanning line
   const linePosition = useSharedValue(0);
   const linePosition = useSharedValue(0);
-  const linePosition = useSharedValue(0);
 
   useEffect(() => {
     linePosition.value = withRepeat(
