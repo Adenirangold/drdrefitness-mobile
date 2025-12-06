@@ -29,11 +29,6 @@ const inner = rrect(
     height / 2 - innerDimension / 2,
     innerDimension,
     innerDimension
-    innerDimension
- 
- 
-   
-    
   ),
   50,
   50
